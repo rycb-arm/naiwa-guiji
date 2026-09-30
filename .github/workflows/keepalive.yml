@@ -1,0 +1,41 @@
+# 保活：防止 Supabase 免费项目因闲置被自动暂停
+#
+# 为什么需要：Supabase 免费项目闲置约 7 天会自动暂停，之后所有
+# 请求报错。群里冷场一周，链接就打不开了 —— 这个定时任务让项目
+# 保持活跃。
+#
+# 使用前：在仓库 Settings → Secrets and variables → Actions 里
+# 添加两个 secret（名字必须完全一致）：
+#   SUPABASE_URL       例：https://abcdefghijklmn.supabase.co
+#   SUPABASE_ANON_KEY  你的 anon key
+#
+# ⚠️ 已知残余风险：GitHub 会在仓库连续 60 天无提交活动后停用定时
+#    工作流。60 天 > 7 天，所以即使发生你也有充足时间发现并手动
+#    触发一次（Actions 页面 → Keep Supabase Alive → Run workflow）。
+#    想彻底免疫可换用 cron-job.org 之类的外部免费定时服务。
+
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    # 每天 UTC 03:00（北京时间 11:00）跑一次
+    - cron: '0 3 * * *'
+  # 允许手动触发，方便刚停用时立刻救活
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST API
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/posts?select=id&limit=1" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}")
+          echo "HTTP $code"
+          if [ "$code" != "200" ]; then
+            echo "::error::保活请求返回 $code，Supabase 项目可能已被暂停，去控制台恢复一下。"
+            exit 1
+          fi
+          echo "✅ 项目活跃"

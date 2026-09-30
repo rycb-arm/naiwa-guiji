@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FFE600">
+<meta name="description" content="东川路流动奶龙の轨迹 —— 谁都能传，传完就排上，按时间倒序。">
+<meta name="format-detection" content="telephone=no">
+
+<!--
+  内容安全策略：所有内容都是陌生人可以随便写的，所以这里额外上一道锁。
+  · script-src 'self'      不执行任何内联脚本（整个项目没有一行内联 JS）
+  · connect-src            只允许访问自己的域名和 Supabase
+  · object-src 'none'      禁止 Flash/插件类嵌入
+  注意：改这里之前先想清楚，放宽 CSP 等于拆掉 XSS 的第二道防线。
+
+  页面没有任何图片，img-src 不单列，走 default-src 'self' 就够
+  （浏览器自动请求的 favicon.ico 也在这个范围内）。
+-->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self';
+  style-src 'self' 'unsafe-inline';
+  connect-src 'self' https://*.supabase.co;
+  font-src 'self';
+  object-src 'none';
+  base-uri 'none';
+  form-action 'none';
+">
+
+<title>东川路流动奶龙の轨迹</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="hero">
+  <h1 class="hero-title" id="title" title="">
+    <span class="l1">东川路流动奶龙</span>
+    <span class="l2">の 轨迹</span>
+  </h1>
+  <p class="hero-sub">谁都能传 · 传完就排上 · 按时间倒序</p>
+</header>
+
+<main class="wrap">
+
+  <!-- ============ 发布区 ============ -->
+  <section class="compose" id="compose">
+    <textarea class="field" id="content" rows="4" maxlength="2000"
+              placeholder="说点什么…"></textarea>
+
+    <input class="field" id="place" type="text" maxlength="50"
+           placeholder="📍 在哪？（比如：东川路）">
+
+    <button class="publish" id="publish" type="button">发 布</button>
+    <p class="msg" id="composeMsg" hidden></p>
+  </section>
+
+  <!-- ============ 时间轴 ============ -->
+  <section class="feed" id="feed" aria-live="polite"></section>
+
+  <p class="feed-state" id="feedState"></p>
+
+  <button class="more" id="more" type="button" hidden>加载更多</button>
+
+</main>
+
+<!-- ============ 删除口令弹窗（仅管理员模式） ============ -->
+<div class="modal" id="pwdModal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="pwdTitle">
+    <h2 class="modal-title" id="pwdTitle">删除口令</h2>
+    <input class="field" id="pwdInput" type="password" autocomplete="current-password" placeholder="输入口令">
+    <p class="msg" id="pwdMsg" hidden></p>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="pwdCancel" type="button">取消</button>
+      <button class="btn-danger" id="pwdOk" type="button">删除</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 配置缺失提示 ============ -->
+<div class="fatal" id="fatal" hidden>
+  <div class="fatal-box">
+    <h2>还没配置好</h2>
+    <p id="fatalMsg"></p>
+  </div>
+</div>
+
+<!-- Supabase SDK 已打包进仓库（vendor/），运行时不依赖任何外部 CDN -->
+<script src="vendor/supabase.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

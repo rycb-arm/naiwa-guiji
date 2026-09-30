@@ -1,0 +1,375 @@
+/* ============================================================
+   东川路流动奶龙の轨迹 —— 沙雕梗图风
+
+   两个刻意的设计取舍：
+   1. 高饱和只给头部。整页荧光黄会让几十条内容完全没法读，
+      所以卡片区用米白纸底 + 黑描边 + 硬阴影，保住可读性。
+   2. 零字体请求。中文 web 字体动辄几 MB，微信里加载极慢，
+      且 Google Fonts 在国内不可用。改用系统字体栈 + 粗描边
+      模拟梗图大字。
+   ============================================================ */
+
+:root {
+  --yellow: #FFE600;
+  --yellow-deep: #FFC800;
+  --ink: #111111;
+  --paper: #FFFDF5;
+  --bg: #EDE6D6;
+  --red: #FF4D3D;
+  --cyan: #00C2FF;
+  --radius: 4px;
+  --shadow: 5px 5px 0 var(--ink);
+}
+
+* { box-sizing: border-box; }
+
+/* ⚠️ 地基，别删。
+   hidden 属性靠的是浏览器默认样式 [hidden]{display:none}，而作者样式表
+   里的 display 优先级更高，会把默认值盖掉 —— 一旦某个元素又写了
+   display:flex/block，它的 hidden 就彻底失效、永远可见。
+   本项目的遮罩、弹窗、灯箱、加载按钮全靠 hidden 控制显隐，所以这里
+   必须用 !important 把默认行为钉死。 */
+[hidden] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB",
+               "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  /* 卡片有倾斜，防止横向滚动条 */
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ------------------------------------------------------------
+   头部：唯一的高饱和区域
+   ------------------------------------------------------------ */
+.hero {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      var(--yellow) 0 28px,
+      var(--yellow-deep) 28px 56px
+    );
+  border-bottom: 5px solid var(--ink);
+  padding: 28px 18px 22px;
+  text-align: center;
+}
+
+.hero-title {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  /* 系统字体 + 超粗描边 = 梗图大字，且零字体下载 */
+  font-weight: 900;
+  font-size: clamp(30px, 10.5vw, 56px);
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  color: #fff;
+  -webkit-text-stroke: 0.09em var(--ink);
+  paint-order: stroke fill;          /* 描边压在字形下方，不啃笔画 */
+  text-shadow: 0.055em 0.055em 0 var(--ink);
+  /* 轻微旋转，贴纸感 */
+  transform: rotate(-2deg);
+}
+
+.hero-title .l2 {
+  color: var(--cyan);
+  transform: rotate(1.2deg);
+}
+
+.hero-sub {
+  margin: 14px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.72);
+  display: inline-block;
+  padding: 3px 12px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+}
+
+/* ------------------------------------------------------------
+   布局
+   ------------------------------------------------------------ */
+.wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px 14px calc(40px + env(safe-area-inset-bottom));
+}
+
+/* ------------------------------------------------------------
+   发布区
+   ------------------------------------------------------------ */
+.compose {
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px;
+  margin-bottom: 30px;
+}
+
+.field {
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
+  font: inherit;
+  font-size: 16px;              /* ≥16px，否则 iOS 聚焦时会自动放大页面 */
+  color: var(--ink);
+  background: #fff;
+  border: 3px solid var(--ink);
+  border-radius: var(--radius);
+  resize: vertical;
+}
+
+.field:focus {
+  outline: none;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.field::placeholder { color: #9a9a9a; }
+
+.publish {
+  width: 100%;
+  margin-top: 14px;
+  padding: 16px;
+  font: inherit;
+  font-size: 19px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  color: var(--yellow);
+  background: var(--ink);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+
+.publish:active {
+  transform: translate(3px, 3px);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.publish[disabled] {
+  opacity: 0.5;
+  cursor: default;
+  transform: none;
+  box-shadow: var(--shadow);
+}
+
+.msg {
+  margin: 10px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #444;
+}
+
+.msg.is-error { color: var(--red); }
+
+/* ------------------------------------------------------------
+   时间轴卡片
+   ------------------------------------------------------------ */
+.card {
+  position: relative;
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 12px;
+  margin: 0 0 24px;
+  /* 倾斜角由 JS 按 id 生成，保证同一条每次都一样 */
+  transform: rotate(var(--tilt, 0deg));
+}
+
+.card-text {
+  margin: 0 0 10px;
+  white-space: pre-wrap;         /* 保留用户换行 */
+  overflow-wrap: anywhere;       /* 长链接/长串不撑破卡片 */
+  word-break: break-word;
+}
+
+.card-text.is-clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-expand {
+  margin: -4px 0 10px;
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0a6ea8;
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #555;
+}
+
+.card-place {
+  background: var(--yellow);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 1px 9px;
+  color: var(--ink);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-del {
+  margin-left: auto;
+  padding: 5px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  color: #fff;
+  background: var(--red);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+/* 管理员模式：整个页面加一圈红框提示，避免误删 */
+body.admin .card { outline: 3px dashed var(--red); outline-offset: 4px; }
+
+/* ------------------------------------------------------------
+   状态 / 加载更多
+   ------------------------------------------------------------ */
+.feed-state {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #777;
+  margin: 8px 0 20px;
+  min-height: 1.2em;
+}
+
+.more {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--ink);
+  background: var(--yellow);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+
+.more:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0 var(--ink); }
+
+/* ------------------------------------------------------------
+   弹窗 / 致命错误
+   ------------------------------------------------------------ */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.modal-box {
+  width: 100%;
+  max-width: 360px;
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: 7px 7px 0 var(--ink);
+  padding: 18px;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.modal .field { margin-top: 14px; }
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.btn-ghost,
+.btn-danger {
+  flex: 1;
+  padding: 13px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 900;
+  border: 3px solid var(--ink);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.btn-ghost  { color: var(--ink); background: #fff; }
+.btn-danger { color: #fff; background: var(--red); }
+
+.fatal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg);
+}
+
+.fatal-box {
+  max-width: 480px;
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px;
+}
+
+.fatal-box h2 { margin: 0 0 10px; font-size: 20px; font-weight: 900; }
+.fatal-box p  { margin: 0; font-size: 15px; line-height: 1.7; }
+.fatal-box code {
+  background: var(--yellow);
+  padding: 1px 5px;
+  border: 1px solid var(--ink);
+  border-radius: 3px;
+  font-size: 13px;
+}
+
+/* 尊重系统的「减弱动态效果」设置 */
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
